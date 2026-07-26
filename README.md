@@ -13,7 +13,6 @@ The analysis uses SQL to transform transaction-level data into account-level mon
 
 The project uses the PaySim mobile money transaction dataset. PaySim is a synthetic financial dataset built to resemble the normal operation of mobile money transactions while injecting malicious behavior for fraud detection analysis.
 
-> Important note: the source dataset is synthetic and intended for analysis/portfolio use. It should not be presented as confidential client data or actual bank customer data.
 
 ## Business problem
 
@@ -130,50 +129,3 @@ Purpose: support deeper account-level investigation from the main analysis page.
 | Top fraud destination account | C668046170 |
 | Top fraud originator account | C99979309 |
 | Timeline step with highest fraud signal count | 212 |
-
-## Project files
-
-```text
-Fintech_Transaction_Fraud_Analytics/
-├── README.md
-├── sql/
-│   ├── 00_all_saved_queries_from_sqbpro.sql
-│   ├── 01_account_monitoring_model.sql
-│   ├── 02_fraud_by_transaction_type.sql
-│   ├── 03_fraud_timeline.sql
-│   ├── 04_fraud_destinations.sql
-│   └── 05_fraud_originators.sql
-├── data_exports/
-│   ├── account_monitoring_export.csv
-│   ├── fraud_transaction_type.csv
-│   ├── fraud_timeline.csv
-│   ├── fraud_destinations.csv
-│   └── fraud_originators.csv
-├── screenshots/
-│   └── add_dashboard_screenshots_here.md
-├── docs/
-│   ├── data_dictionary.md
-│   └── deployment_checklist.md
-└── linkedin/
-    └── linkedin_launch_post.md
-```
-
-## Important limitation
-
-The `.pbix` file for this project is currently larger than 100 MB, so it should not be uploaded directly to GitHub through normal GitHub storage. Use a live Power BI public link, a compressed sample version, or Git Large File Storage if you decide to store the Power BI file itself.
-
-## How to present this project
-
-Recommended title for LinkedIn/GitHub:
-
-**Digital Banking Fraud Risk Analysis Dashboard**
-
-Recommended portfolio framing:
-
-> I built a Power BI fraud monitoring dashboard using SQL-generated account-level metrics from synthetic mobile money transaction data. The project focuses on fraud pattern detection, transaction-type risk, account-level monitoring, and an explainable suspicion scoring framework.
-
-## Live report
-
-Add the Power BI public report link here once published:
-
-`[Power BI Live Report - add link here]`
