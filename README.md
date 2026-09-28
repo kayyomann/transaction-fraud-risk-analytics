@@ -1,6 +1,6 @@
-# Digital Banking Fraud Risk Analysis
+# Transaction Fraud Risk Analysis (Mobile Money)
 
-**SQL + Power BI analysis of 6.36M synthetic mobile-money transactions to find where fraud concentrates and which accounts to review first.**
+**SQL + Power BI analysis of 6.36M synthetic mobile-money transactions to find where fraud concentrates and build a review-prioritization view for fraud teams.**
 
 [View the interactive Power BI dashboard](https://app.powerbi.com/view?r=eyJrIjoiNWY3M2Q0YzItMjFiZC00MTFhLTg3ZmItNTdjMDI4YjkwYmRjIiwidCI6IjA3ZjFiOTE0LTE1YjMtNDUzOC1hMmNjLWM5ODcyY2U4Y2YxMCJ9&pageName=a991c259c9200626fd4e)
 
@@ -10,11 +10,11 @@
 
 **Problem.** Fraud teams need to know where fraud is concentrated and which accounts deserve investigation first, without reviewing the entire transaction population.
 
-**What I did.** Analyzed 6.36M synthetic mobile-money transactions (PaySim) in SQL, built account-level risk metrics, and created a Power BI dashboard to prioritize accounts for review.
+**What I did.** Analyzed 6.36M synthetic mobile-money transactions (PaySim) in SQL, built account-level risk metrics, and created a Power BI dashboard that ranks accounts using known fraud patterns.
 
 **What I found.** All 8,213 fraudulent transactions occurred in two transaction types, TRANSFER and CASH_OUT, which together make up about 43.5% of transactions. Fraud was 0.13% of transactions but roughly 1% of transaction value (about 12.1B simulated units), meaning the average fraudulent transaction was roughly 8x larger than the average transaction.
 
-**So what.** In this dataset, fraud was concentrated by transaction type and skewed toward high-value transactions. A real monitoring team could test type- and amount-based review rules against its own data before narrowing its monitoring scope.
+**So what.** In this dataset, limiting first-line review to TRANSFER and CASH_OUT would have covered 100% of fraud while removing about 56.5% of transactions from the review queue. Because PaySim only simulates fraud through these two types, this is a rule to test on real data, not a proven result. The next step is a score built only on signals available before fraud is confirmed, so it can support live triage.
 
 ---
 
@@ -47,7 +47,8 @@ For each account, the SQL model calculates: `txn_count`, `total_amount`, `fraud_
 ```
 suspicion_score = (0.6 * fraud_rate) + (0.3 * risk_rate) + (0.1 * activity_score)
 ```
-
+> Because `fraud_rate` uses confirmed fraud labels, this score ranks accounts by known fraud exposure. It is a review and pattern-analysis tool, not a detector of undiscovered fraud.
+>
 - **Fraud rate (60%)**: confirmed fraud signals are the strongest evidence.
 - **Risk rate (30%)**: some transaction types are structurally more exposed to fraud.
 - **Activity score (10%)**: highly active accounts may warrant more monitoring, but activity alone does not indicate fraud.
@@ -60,7 +61,7 @@ suspicion_score = (0.6 * fraud_rate) + (0.3 * risk_rate) + (0.1 * activity_score
 
 ## Key findings
 
-- **Fraud is concentrated in two transaction types.** All fraud occurred in TRANSFER and CASH_OUT (~43.5% of transactions). TRANSFER has the highest fraud rate; CASH_OUT has the highest fraud count. PAYMENT, DEBIT, and CASH_IN show no fraud.
+- **Fraud is concentrated in two transaction types.** All fraud occurred in TRANSFER and CASH_OUT (~43.5% of transactions). TRANSFER has the highest fraud rate; CASH_OUT has the highest fraud count. PAYMENT, DEBIT, and CASH_IN show no fraud. *Note: PaySim simulates fraud as a transfer-then-cash-out pattern, so this concentration partly reflects how the data was generated.*
 - **Fraud skews toward high-value transactions.** Fraud is ~0.13% of transactions but ~1% of value; the average fraudulent transaction is ~8x the overall average.
 - **Fraud looks like takeover-and-extract, not broad laundering.** Fraudulent senders generally send to a single receiver, consistent with account takeover followed by immediate extraction.
 - **A few receivers look like mule accounts.** A small number of destination accounts receive fraudulent funds from more than one sender.
