@@ -1,136 +1,98 @@
 # Digital Banking Fraud Risk Analysis
 
-**Project type:** Power BI + SQL portfolio case study  
-**Focus:** Digital transaction monitoring, fraud signals, account risk scoring, and investigation prioritization
+**SQL + Power BI analysis of 6.36M synthetic mobile-money transactions to find where fraud concentrates and which accounts to review first.**
 
-## Live Dashboard
+[View the interactive Power BI dashboard](https://app.powerbi.com/view?r=eyJrIjoiNWY3M2Q0YzItMjFiZC00MTFhLTg3ZmItNTdjMDI4YjkwYmRjIiwidCI6IjA3ZjFiOTE0LTE1YjMtNDUzOC1hMmNjLWM5ODcyY2U4Y2YxMCJ9&pageName=a991c259c9200626fd4e)
 
-**[View the Interactive Power BI Dashboard](https://app.powerbi.com/view?r=eyJrIjoiNWY3M2Q0YzItMjFiZC00MTFhLTg3ZmItNTdjMDI4YjkwYmRjIiwidCI6IjA3ZjFiOTE0LTE1YjMtNDUzOC1hMmNjLWM5ODcyY2U4Y2YxMCJ9&pageName=a991c259c9200626fd4e)**
+---
 
-## Overview
+## Summary
 
-This project analyzes simulated digital banking/mobile money transactions to identify fraud patterns and prioritize accounts for review.
+**Problem.** Fraud teams need to know where fraud is concentrated and which accounts deserve investigation first, without reviewing the entire transaction population.
 
-The analysis uses SQL to transform transaction-level data into account-level monitoring outputs, then uses Power BI to present fraud patterns across transaction types, time steps, account behavior, and suspicious destination/originator activity.
+**What I did.** Analyzed 6.36M synthetic mobile-money transactions (PaySim) in SQL, built account-level risk metrics, and created a Power BI dashboard to prioritize accounts for review.
+
+**What I found.** All 8,213 fraudulent transactions occurred in two transaction types, TRANSFER and CASH_OUT, which together make up about 43.5% of transactions. Fraud was 0.13% of transactions but roughly 1% of transaction value (about 12.1B simulated units), meaning the average fraudulent transaction was roughly 8x larger than the average transaction.
+
+**So what.** In this dataset, fraud was concentrated by transaction type and skewed toward high-value transactions. A real monitoring team could test type- and amount-based review rules against its own data before narrowing its monitoring scope.
+
+---
 
 ## Dataset
 
-The project uses the PaySim mobile money transaction dataset. PaySim is a synthetic financial dataset built to resemble the normal operation of mobile money transactions while injecting malicious behavior for fraud detection analysis.
+This project uses the **PaySim** mobile-money dataset, a synthetic dataset built to resemble normal mobile-money activity with injected fraudulent behavior. Each `step` represents one hour of simulated time.
 
-> Important note: the source dataset is synthetic and intended for analysis/portfolio use. It should not be presented as confidential client data or actual bank customer data.
+The data is synthetic. It is not client data or real bank customer data, and amounts are simulated units rather than a real currency.
 
-## Business problem
+## Business questions
 
-Digital payment systems produce high-volume transaction data. Fraud teams need more than raw transaction tables. They need a monitoring view that helps answer:
-
-- Which transaction types are most associated with fraud signals?
+- Which transaction types are most associated with fraud?
 - When do fraud events occur across the transaction timeline?
 - Which accounts should be prioritized for investigation?
 - Which destination accounts receive the largest fraudulent flows?
-- Are suspicious accounts risky because of confirmed fraud signals, risky transaction structure, high activity, or financial exposure?
+- Is an account risky because of confirmed fraud, risky transaction structure, high activity, or financial exposure?
 
-## Tools used
+## Approach
 
-- **SQL / SQLite** for data preparation and account-level modelling
-- **Power BI** for dashboard design and reporting
-- **Power Query** for data loading and transformation
-- **DAX** for report-level measures
-- **GitHub** for documentation and project packaging
+**Tools:** SQL (SQLite) for data preparation and account-level modelling · Power Query for loading · DAX for report measures · Power BI for the dashboard.
 
-## Data model and analytical approach
+**Account-level model.** Every transaction is treated as two account events: an outgoing event for the sender and an incoming event for the receiver. This gives a view of both sides of each account's behavior.
 
-The core modelling step treats every transaction as two account events:
+Events are grouped by account, and the monitoring output keeps only accounts with **10 or more transaction events** (146,679 accounts). The threshold removes accounts with too little activity to rank meaningfully.
 
-1. **Outgoing event** for the sender account
-2. **Incoming event** for the receiver account
+For each account, the SQL model calculates: `txn_count`, `total_amount`, `fraud_signal_count`, `risk_event_count`, `incoming_count`, `outgoing_count`, `first_step`, `last_step`, `fraud_rate`, `risk_rate`, `activity_score`, `activity_band`, and `suspicion_score`.
 
-This creates an account-level view of both sides of transaction behavior.
+**Suspicion score.** A transparent, heuristic ranking, not a machine learning model:
 
-The SQL model then calculates:
-
-- `txn_count`
-- `total_amount`
-- `fraud_signal_count`
-- `risk_event_count`
-- `incoming_count`
-- `outgoing_count`
-- `first_step`
-- `last_step`
-- `fraud_rate`
-- `risk_rate`
-- `activity_score`
-- `activity_band`
-- `suspicion_score`
-
-## Suspicion score logic
-
-The suspicion score is a heuristic scoring model:
-
-```text
-suspicion_score =
-    (0.6 * fraud_rate) +
-    (0.3 * risk_rate) +
-    (0.1 * activity_score)
+```
+suspicion_score = (0.6 * fraud_rate) + (0.3 * risk_rate) + (0.1 * activity_score)
 ```
 
-The weighting is based on business logic:
+- **Fraud rate (60%)**: confirmed fraud signals are the strongest evidence.
+- **Risk rate (30%)**: some transaction types are structurally more exposed to fraud.
+- **Activity score (10%)**: highly active accounts may warrant more monitoring, but activity alone does not indicate fraud.
 
-- **Fraud rate** receives the highest weight because confirmed fraud signals are the strongest evidence.
-- **Risk rate** receives medium weight because some transaction types are structurally more exposed to fraud.
-- **Activity score** receives a smaller weight because highly active accounts may require more monitoring, but activity alone does not prove fraud.
+## Dashboard
 
-This is not a machine learning model. It is a transparent, explainable scoring framework designed for portfolio and dashboard analysis.
-
-## Dashboard pages
-
-### 1. Fraud Monitoring Overview
-
-Purpose: provide a high-level view of transaction volume, fraud rate, risk rate, and fraud trends.
-
-Visuals include:
-
-- Total accounts
-- Total transaction volume
-- Average fraud rate
-- Average risk rate
-- Fraud signals by transaction type
-- Fraud rate over time
-
-### 2. Fraud Risk Analysis
-
-Purpose: prioritize accounts for investigation.
-
-Visuals include:
-
-- Fraud rate vs transaction activity
-- Suspicious account watchlist
-- Account-level fraud and risk metrics
-- Business explanation of fraud risk drivers
-
-### 3. Account Drill Tooltip
-
-Purpose: support deeper account-level investigation from the main analysis page.
+1. **Fraud Monitoring Overview**: total accounts, transaction volume, average fraud and risk rates, fraud by transaction type, fraud over time.
+2. **Fraud Risk Analysis**: fraud rate vs. activity, suspicious account watchlist, account-level metrics, explanation of risk drivers.
+3. **Account Drill Tooltip**: account-level detail from the analysis page.
 
 ## Key findings
 
-1. Fraud signals are concentrated in **TRANSFER** and **CASH_OUT** transactions.
-2. **TRANSFER** has the highest fraud rate among transaction types.
-3. Routine transaction types such as **PAYMENT**, **DEBIT**, and **CASH_IN** show no fraud signals in the exported transaction-type summary.
-4. Fraud originators generally send fraudulent funds to one receiver, suggesting account takeover and immediate extraction behavior rather than broad laundering networks.
-5. A small number of destination accounts receive fraudulent funds from more than one sender, which may indicate mule-account style behavior.
-6. Suspicion scoring helps rank accounts by combining confirmed fraud signals, risky transaction exposure, and activity level.
+- **Fraud is concentrated in two transaction types.** All fraud occurred in TRANSFER and CASH_OUT (~43.5% of transactions). TRANSFER has the highest fraud rate; CASH_OUT has the highest fraud count. PAYMENT, DEBIT, and CASH_IN show no fraud.
+- **Fraud skews toward high-value transactions.** Fraud is ~0.13% of transactions but ~1% of value; the average fraudulent transaction is ~8x the overall average.
+- **Fraud looks like takeover-and-extract, not broad laundering.** Fraudulent senders generally send to a single receiver, consistent with account takeover followed by immediate extraction.
+- **A few receivers look like mule accounts.** A small number of destination accounts receive fraudulent funds from more than one sender.
+- **Fraud peaks at a specific point in time.** The highest fraud count occurred at step 212 (hour 212 of the simulation).
 
-## Exported summary statistics
+## Summary statistics
 
 | Metric | Value |
-|---|---:|
-| Transaction rows analyzed | 6,362,620 |
+|---|---|
+| Transactions analyzed | 6,362,620 |
 | Account-monitoring rows exported | 146,679 |
-| Total transaction amount | 1,144,392,944,759.77 |
-| Fraud signal count | 8,213 |
-| Overall fraud signal rate | 0.1291% |
-| Highest fraud-rate transaction type | TRANSFER |
-| Highest fraud-count transaction type | CASH_OUT |
-| Top fraud destination account | C668046170 |
-| Top fraud originator account | C99979309 |
-| Timeline step with highest fraud signal count | 212 |
+| Total transaction value | ~1.14T simulated units |
+| Fraudulent transactions | 8,213 |
+| Fraud rate (by count) | 0.13% |
+| Fraudulent transaction value | ~12.1B simulated units (~1% of total) |
+| Share of transactions in TRANSFER + CASH_OUT | ~43.5% |
+| Highest fraud-rate type | TRANSFER |
+| Highest fraud-count type | CASH_OUT |
+
+## Recommendations
+
+These are hypotheses to test on real data, not production rules.
+
+1. **Test type-based review queues.** Check whether concentrating first-line review on higher-risk transaction types captures most fraud without leaving blind spots in the others.
+2. **Test amount thresholds within high-risk types.** Because fraud skews toward high values, evaluate amount-based triggers for TRANSFER and CASH_OUT.
+3. **Monitor receiving accounts.** Flag destination accounts that receive funds from multiple flagged senders as potential mule accounts.
+4. **Rank on pre-confirmation signals.** Rebuild the score using only signals available before fraud is confirmed, so it can support live triage.
+
+## Limitations
+
+- **Synthetic data.** Patterns in PaySim may not reflect any real institution's fraud mix.
+- **The suspicion score uses confirmed fraud labels.** It is a prioritization and review view of known outcomes, not a predictive model.
+- **The 10-event threshold shapes the watchlist.** In PaySim most sending accounts appear only once, so the ranked accounts are mostly receiving accounts. Low-activity accounts, including many fraudulent senders, are outside the score.
+- **No cost or false-positive analysis.** The project does not estimate investigation cost, review capacity, or false-positive rates.
+- **Rounded figures.** The fraudulent value and ~8x ratio are derived from exported summary totals rather than recomputed from the raw data.
