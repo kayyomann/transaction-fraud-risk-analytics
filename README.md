@@ -3,6 +3,10 @@
 **Project type:** Power BI + SQL portfolio case study  
 **Focus:** Digital transaction monitoring, fraud signals, account risk scoring, and investigation prioritization
 
+## Live Dashboard
+
+**[View the Interactive Power BI Dashboard](https://app.powerbi.com/view?r=eyJrIjoiNWY3M2Q0YzItMjFiZC00MTFhLTg3ZmItNTdjMDI4YjkwYmRjIiwidCI6IjA3ZjFiOTE0LTE1YjMtNDUzOC1hMmNjLWM5ODcyY2U4Y2YxMCJ9&pageName=a991c259c9200626fd4e)**
+
 ## Overview
 
 This project analyzes simulated digital banking/mobile money transactions to identify fraud patterns and prioritize accounts for review.
@@ -171,9 +175,3 @@ Recommended title for LinkedIn/GitHub:
 Recommended portfolio framing:
 
 > I built a Power BI fraud monitoring dashboard using SQL-generated account-level metrics from synthetic mobile money transaction data. The project focuses on fraud pattern detection, transaction-type risk, account-level monitoring, and an explainable suspicion scoring framework.
-
-## Live report
-
-Add the Power BI public report link here once published:
-
-`[Power BI Live Report - add link here]`
